@@ -33,6 +33,6 @@ public class MizarFileType extends LanguageFileType {
 
     @Override
     public Icon getIcon() {
-        return null;
+        return MizarIcons.FILE;
     }
 }

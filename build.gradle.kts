@@ -9,6 +9,10 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
 }
+dependencies {
+    implementation("de.jflex:jflex:1.8.2")
+    implementation("de.jflex:cup_runtime:11b")
+}
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html

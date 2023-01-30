@@ -24,6 +24,11 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
+        <fileType
+                name="Mizar Article File"
+                implementationClass="org.abos.mizar.mizarplugin.MizarFileType"
+                fieldName="INSTANCE"
+                language="Mizar"
+                extensions="miz"/>
     </extensions>
 </idea-plugin>
