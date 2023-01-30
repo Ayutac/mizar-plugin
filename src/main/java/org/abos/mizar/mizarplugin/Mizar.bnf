@@ -1,5 +1,5 @@
 {
-  parserClass="org.abos.mizar.mizarplugin"
+  parserClass="org.abos.mizar.mizarplugin.MizarParser"
 
   extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
 
@@ -12,6 +12,7 @@
   elementTypeClass="org.abos.mizar.mizarplugin.psi.MizarElementType"
   tokenTypeClass="org.abos.mizar.mizarplugin.psi.MizarTokenType"
   tokens=[
+    PEQ=".="
     EQ="="
     SEMI=";"
     COLON=":"
@@ -46,7 +47,7 @@
     BEGIN="begin"
     RESERVE="reserve"
     FOR="for"
-    DEFINITION="definition"
+    DEFINITION_="definition"
     REDEFINE="redefine"
     REGISTRATION="registration"
     CLUSTER="cluster"
@@ -57,8 +58,8 @@
     TO="to"
     NOTATION="notation"
     END="end"
-    THEOREM="theorem"
-    PROOF="proof"
+    THEOREM_="theorem"
+    PROOF_="proof"
     SCHEME="scheme"
     PROVIDED="provided"
     STRUCT="struct"
@@ -109,8 +110,8 @@
     THEN="then"
     PER="per"
     CASES="cases"
-    SUPPOSE="suppose"
-    CASE="case"
+    SUPPOSE_="suppose"
+    CASE_="case"
     ASSUME="assume"
     THAT="that"
     GIVEN="given"
@@ -139,11 +140,11 @@
     IT="it"
     WHERE="where"
 
-    filename="regexp:[A-Z][A-Z_0-9]*"
+    filename="regexp:[A-Z][A-Z_0-9]{2,7}"
     number="regexp:[1-9]\d*"
     var="regexp:\$[1-9]|\$10"
     id="regexp:\w+"
-    symbol="regexp:[!\"#%&'()*+\-./<=>?@\[\]\\^_`{}~\w]+"
+    symbol="regexp:[!\"#%&'*+\-./<=>?@\[\]\\^_`{}~\w]+"
   ]
 }
 
@@ -165,7 +166,7 @@ Reserved-Identifiers ::= id ("," id)
 Definitional-Item ::= Definitional-Block ";"
 Registration-Item ::= Registration-Block ";"
 Notation-Item ::= Notation-Block ";"
-Definitional-Block ::= DEFINITION (Definition-Item | Definition | Redefinition)* END
+Definitional-Block ::= DEFINITION_ (Definition-Item | Definition | Redefinition)* END
 Registration-Block ::= REGISTRATION (Loci-Declaration | Cluster-Registration | Identify-Registration | Property-Registration | Reduction-Registration | Auxiliary-Item)* END
 Notation-Block ::= NOTATION (Loci-Declaration | Notation-Declaration)* END
 Definition-Item ::= Loci-Declaration | Permissive-Assumption | Auxiliary-Item
@@ -175,13 +176,13 @@ Permissive-Assumption ::= Assumption
 Definition ::= Structure-Definition | Mode-Definition | Functor-Definition | Predicate-Definition | Attribute-Definition
 Redefinition ::= REDEFINE ( Mode-Definition | Functor-Definition | Predicate-Definition | Attribute-Definition )
 Structure-Definition ::= STRUCT ("(" Ancestors ")")? Structure-Symbol (OVER Loci)? "(#" Fields "#)" ";"
-Ancestors ::= Structure-Type-Expression ("," Structure-Type-Expression)*
+Ancestors ::= Structure-Type-Expression ("," Structure-Type-Expression)* {pin(".*")=1}
 Structure-Symbol ::= symbol
 Loci ::= Locus ("," Locus)*
-Fields ::= Field-Segment ("," Field-Segment)*
+Fields ::= Field-Segment ("," Field-Segment)* {pin(".*")=1}
 Locus ::= Variable-Identifier
 Variable-Identifier ::= id
-Field-Segment ::= Selector-Symbol ("," Selector-Symbol)* Specification
+Field-Segment ::= Selector-Symbol ("," Selector-Symbol)* Specification {pin(".*")=1}
 Selector-Symbol ::= symbol
 Specification ::= "->" Type-Expression
 Mode-Definition ::= MODE Mode-Pattern ( Specification? (MEANS Definiens)? ";" Correctness-Conditions | IS Type-Expression ";" ) Mode-Property*
@@ -192,7 +193,7 @@ Definiens ::= Simple-Definiens | Conditional-Definiens
 Simple-Definiens ::= (":" Label-Identifier ":")? ( Sentence | Term-Expression )
 Label-Identifier ::= id
 Conditional-Definiens ::= (":" Label-Identifier ":")? Partial-Definiens-List (OTHERWISE ( Sentence | Term-Expression ))?
-Partial-Definiens-List ::= Partial-Definiens ("," Partial-Definiens)*
+Partial-Definiens-List ::= Partial-Definiens ("," Partial-Definiens)* {pin(".*")=1}
 Partial-Definiens ::= ( Sentence | Term-Expression ) IF Sentence
 Mode-Property ::= SETHOOD Justification ";"
 Functor-Definition ::= FUNC Functor-Pattern Specification? (( MEANS | EQUALS ) Definiens)? ";" Correctness-Conditions Functor-Property*
@@ -216,32 +217,32 @@ Attribute-Antonym ::= ANTONYM Attribute-Pattern FOR Attribute-Pattern ";"
 Attribute-Symbol ::= symbol
 Attribute-Loci ::= Loci | "(" Loci ")"
 Cluster-Registration ::= Existential-Registration | Conditional-Registration | Functorial-Registration
-Existential-Registration ::= CLUSTER Adjective-Cluster FOR Type-Expression ";" Correctness-Conditions
-Adjective-Cluster ::= Adjective*
+Existential-Registration ::= CLUSTER Adjective-Cluster? FOR Type-Expression ";" Correctness-Conditions
+Adjective-Cluster ::= Adjective+
 Adjective ::= NON? Adjective-Arguments? Attribute-Symbol
-Conditional-Registration ::= CLUSTER Adjective-Cluster "->" Adjective-Cluster FOR Type-Expression ";" Correctness-Conditions
-Functorial-Registration ::= CLUSTER Term-Expression "->" Adjective-Cluster (FOR Type-Expression)? ";" Correctness-Conditions
+Conditional-Registration ::= CLUSTER Adjective-Cluster? "->" Adjective-Cluster? FOR Type-Expression ";" Correctness-Conditions
+Functorial-Registration ::= CLUSTER Term-Expression "->" Adjective-Cluster? (FOR Type-Expression)? ";" Correctness-Conditions
 Identify-Registration ::= IDENTIFY Functor-Pattern WITH Functor-Pattern (WHEN Locus "=" Locus ("," Locus "=" Locus)*)? ";" Correctness-Conditions
 Property-Registration ::= SETHOOD OF Type-Expression Justification ";"
 Reduction-Registration ::= REDUCE Term-Expression TO Term-Expression ";" Correctness-Conditions
 Correctness-Conditions ::= Correctness-Condition* (CORRECTNESS Justification ";")?
 Correctness-Condition ::= (EXISTENCE | UNIQUENESS | COHERENCE | COMPATIBILITY | CONSISTENCY | REDUCIBILITY) Justification ";"
-Theorem ::= THEOREM Compact-Statement
+Theorem ::= THEOREM_ Compact-Statement
 Scheme-Item ::= Scheme-Block ";"
-Scheme-Block ::= SCHEME Scheme-Identifier "{" Scheme-Parameters "}" ":" Scheme-Conclusion (PROVIDED Scheme-Premise (AND Scheme-Premise)*)? ( PROOF | ";" ) Reasoning END
+Scheme-Block ::= SCHEME Scheme-Identifier "{" Scheme-Parameters "}" ":" Scheme-Conclusion (PROVIDED Scheme-Premise (AND Scheme-Premise)*)? ( PROOF_ | ";" ) Reasoning END
 Scheme-Identifier ::= id
-Scheme-Parameters ::= Scheme-Segment ("," Scheme-Segment)*
+Scheme-Parameters ::= Scheme-Segment ("," Scheme-Segment)* {pin(".*")=1}
 Scheme-Conclusion ::= Sentence
 Scheme-Premise ::= Proposition
 Scheme-Segment ::= Predicate-Segment | Functor-Segment
-Predicate-Segment ::= Predicate-Identifier ("," Predicate-Identifier)* "[" Type-Expression-List? "]"
+Predicate-Segment ::= Predicate-Identifier ("," Predicate-Identifier)* "[" Type-Expression-List? "]" {pin(".*")=1}
 Predicate-Identifier ::= id
-Functor-Segment ::= Functor-Identifier ("," Functor-Identifier)* "(" Type-Expression-List? ")" Specification
+Functor-Segment ::= Functor-Identifier ("," Functor-Identifier)* "(" Type-Expression-List? ")" Specification {pin(".*")=1}
 Functor-Identifier ::= id
 Auxiliary-Item ::= Statement | Private-Definition
 Private-Definition ::= Constant-Definition | Private-Functor-Definition | Private-Predicate-Definition
 Constant-Definition ::= SET Equating-List ";"
-Equating-List ::= Equating ("," Equating)*
+Equating-List ::= Equating ("," Equating)* {pin(".*")=1}
 Equating ::= Variable-Identifier "=" Term-Expression
 Private-Functor-Definition ::= DEFFUNC Private-Functor-Pattern "=" Term-Expression ";"
 Private-Predicate-Definition ::= DEFPRED Private-Predicate-Pattern MEANS Sentence ";"
@@ -249,9 +250,9 @@ Private-Functor-Pattern ::= Functor-Identifier "(" Type-Expression-List? ")"
 Private-Predicate-Pattern ::= Predicate-Identifier "[" Type-Expression-List? "]"
 Reasoning ::= Reasoning-Item* (THEN? PER CASES Simple-Justification ";" ( Case-List | Suppose-List ))?
 Case-List ::= Case+
-Case ::= CASE ( Proposition | Conditions ) ";" Reasoning END ";"
+Case ::= CASE_ ( Proposition | Conditions ) ";" Reasoning END ";"
 Suppose-List ::= Suppose+
-Suppose ::= SUPPOSE ( Proposition | Conditions ) ";" Reasoning END ";"
+Suppose ::= SUPPOSE_ ( Proposition | Conditions ) ";" Reasoning END ";"
 Reasoning-Item ::= Auxiliary-Item | Skeleton-Item
 Skeleton-Item ::= Generalization | Assumption | Conclusion | Exemplification
 Generalization ::= LET Qualified-Variables (SUCH Conditions)? ";"
@@ -268,15 +269,15 @@ Linkable-Statement ::= Compact-Statement | Choice-Statement | Type-Changing-Stat
 Compact-Statement ::= Proposition Justification ";"
 Choice-Statement ::= CONSIDER Qualified-Variables SUCH Conditions Simple-Justification ";"
 Type-Changing-Statement ::= RECONSIDER Type-Change-List AS Type-Expression Simple-Justification ";"
-Type-Change-List ::= ( Equating | Variable-Identifier ) ("," ( Equating | Variable-Identifier ))*
+Type-Change-List ::= ( Equating | Variable-Identifier ) ("," ( Equating | Variable-Identifier ))* {pin(".*")=1}
 Iterative-Equality ::= (Label-Identifier ":")? Term-Expression "=" Term-Expression Simple-Justification (".=" Term-Expression Simple-Justification)+ ";"
 Diffuse-Statement ::= (Label-Identifier ":")? NOW Reasoning END ";"
 Justification ::= Proof | Simple-Justification
 Simple-Justification ::= Scheme-Justification | Straightforward-Justification
-Proof ::= PROOF Reasoning END
-Straightforward-Justification ::= (BY References)?
-Scheme-Justification ::= FROM Scheme-Reference ("(" References ")")?
-References ::= Reference ("," Reference)*
+Proof ::= PROOF_ Reasoning END
+Straightforward-Justification ::= (BY References_)?
+Scheme-Justification ::= FROM Scheme-Reference ("(" References_ ")")?
+References_ ::= Reference ("," Reference)* {pin(".*")=1}
 Reference ::= Local-Reference | Library-Reference
 Scheme-Reference ::= Local-Scheme-Reference | Library-Scheme-Reference
 Local-Reference ::= Label-Identifier
@@ -290,23 +291,23 @@ Conditions ::= THAT Proposition (AND Proposition)*
 Proposition ::= (Label-Identifier ":")? Sentence
 Sentence ::= Formula-Expression
 Formula-Expression ::= "(" Formula-Expression ")" | Atomic-Formula-Expression | Quantified-Formula-Expression | Formula-Expression "&" Formula-Expression | Formula-Expression "&" "..." "&" Formula-Expression | Formula-Expression OR Formula-Expression | Formula-Expression OR "..." OR Formula-Expression | Formula-Expression IMPLIES Formula-Expression | Formula-Expression IFF Formula-Expression | NOT Formula-Expression | CONTRADICTION | THESIS
-Atomic-Formula-Expression ::= Term-Expression-List? (( DOES | DO ) NOT)? Predicate-Symbol Term-Expression-List? { (( DOES | DO ) NOT)? Predicate-Symbol Term-Expression-List } | Predicate-Identifier "[" Term-Expression-List? "]" | Term-Expression IS Adjective+ | Term-Expression IS Type-Expression
+Atomic-Formula-Expression ::= Term-Expression-List? (( DOES | DO ) NOT)? Predicate-Symbol Term-Expression-List? ((( DOES | DO ) NOT)? Predicate-Symbol Term-Expression-List)* | Predicate-Identifier "[" Term-Expression-List? "]" | Term-Expression IS Adjective+ | Term-Expression IS Type-Expression
 Quantified-Formula-Expression ::= FOR Qualified-Variables (ST Formula-Expression)? ( HOLDS Formula-Expression | Quantified-Formula-Expression ) | EX Qualified-Variables ST Formula-Expression
-Qualified-Variables ::= Implicitly-Qualified-Variables | Explicitly-Qualified-Variables | Explicitly-Qualified-Variables "," Implicitly-Qualified-Variables
+Qualified-Variables ::= Explicitly-Qualified-Variables | Explicitly-Qualified-Variables "," Implicitly-Qualified-Variables | Implicitly-Qualified-Variables
 Implicitly-Qualified-Variables ::= Variables
-Explicitly-Qualified-Variables ::= Qualified-Segment ("," Qualified-Segment)*
+Explicitly-Qualified-Variables ::= Qualified-Segment ("," Qualified-Segment)* {pin(".*")=1}
 Qualified-Segment ::= Variables Qualification
-Variables ::= Variable-Identifier ("," Variable-Identifier)*
+Variables ::= Variable-Identifier ("," Variable-Identifier)* {pin(".*")=1}
 Qualification ::= ( BEING | BE ) Type-Expression
-Type-Expression ::= "(" Radix-Type ")" | Adjective-Cluster Type-Expression | Radix-Type
+Type-Expression ::= Adjective-Cluster? "(" Radix-Type ")" | Adjective-Cluster? Radix-Type
 Structure-Type-Expression ::= "(" Structure-Symbol (OVER Term-Expression-List)? ")" | Adjective-Cluster Structure-Symbol (OVER Term-Expression-List)?
 Radix-Type ::= Mode-Symbol (OF Term-Expression-List)? | Structure-Symbol (OVER Term-Expression-List)?
 Type-Expression-List ::= Type-Expression ("," Type-Expression)*
-Term-Expression ::= "(" Term-Expression ")" | Arguments? Functor-Symbol Arguments? | Left-Functor-Bracket Term-Expression-List Right-Functor-Bracket | Functor-Identifier "(" Term-Expression-List? ")" | Structure-Symbol "(#" Term-Expression-List "#)" | THE Structure-Symbol OF Term-Expression | Variable-Identifier | "{" Term-Expression Postqualification* ":" Sentence "}" | THE SET OF ALL Term-Expression Postqualification* | number | Term-Expression QUA Type-Expression | THE Selector-Symbol OF Term-Expression | THE Selector-Symbol | THE Type-Expression | Private-Definition-Parameter | IT
+Term-Expression ::= "(" Term-Expression ")" | Arguments? Functor-Symbol Arguments? | Left-Functor-Bracket Term-Expression-List Right-Functor-Bracket | Functor-Identifier "(" Term-Expression-List? ")" | Structure-Symbol "(#" Term-Expression-List "#)" | THE Structure-Symbol OF Term-Expression | Variable-Identifier | "{" Term-Expression Post-Qualification* ":" Sentence "}" | THE SET OF ALL Term-Expression Post-Qualification* | number | Term-Expression QUA Type-Expression | THE Selector-Symbol OF Term-Expression | THE Selector-Symbol | THE Type-Expression | Private-Definition-Parameter | IT
 Arguments ::= Term-Expression | "(" Term-Expression-List ")"
 Adjective-Arguments ::= Term-Expression-List | "(" Term-Expression-List ")"
 Term-Expression-List ::= Term-Expression ("," Term-Expression)*
-Postqualification ::= WHERE Postqualifying-Segment ("," Postqualifying-Segment)*
-Postqualifying-Segment ::= Postqualified-Variable ("," Postqualified-Variable)* (( IS | ARE ) Type-Expression)?
-Postqualified-Variable ::= id
+Post-Qualification ::= WHERE Post-Qualifying-Segment ("," Post-Qualifying-Segment)*
+Post-Qualifying-Segment ::= Post-Qualified-Variable ("," Post-Qualified-Variable)* (( IS | ARE ) Type-Expression)?
+Post-Qualified-Variable ::= id
 Private-Definition-Parameter ::= var
